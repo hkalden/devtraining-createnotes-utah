@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="DELETE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller=function($rootScope,$scope,spUtil) {
+	/* widget controller */
+	var c = this;
+	c.notePos = 0;
+
+	c.selectItem = function(idx) {  
+		// Set the position indicator to the index value passed in on select
+		c.notePos = idx;
+		var id = c.data.notes[idx].sys_id;
+		console.log('Note ID: ' + id);
+		$rootScope.noteID = id;
+		$rootScope.$emit('selectNote', id);
+	};
+
+	$rootScope.$on('updateTitle', function(event,data) { 
+		c.data.notes[c.notePos].title = data.title;
+		c.data.notes[c.notePos].note = data.note;
+	});
+
+
+	// Record removed from data object on the client and passed to server
+	c.snNoteUpdate = function(name,sysID){
+		for (var i=0;i<c.data.notes.length;i++){
+			if(c.data.notes[i].sys_id == name.data.sys_id){
+				if(name.data.record.note){
+					c.data.notes[i].note = name.data.record.note.display_value;
+				}
+				if(name.data.record.title){
+					c.data.notes[i].title = name.data.record.title.display_value;
+				}
+				c.server.update();
+
+			}
+		}
+	}
+	
+		// Record removed from data object on the server and passed back to client
+	c.snNoteDelete = function(sysID){
+
+		c.server.get({
+			action: 'snDeleteNote',
+			noteID: sysID
+
+		}).then(function(r){
+			c.data.notes = r.data.notes;
+		});
+
+	}
+
+	spUtil.recordWatch($scope, "x_snc_createnotes_note", "numberANYTHING", function(name) {
+		console.log(name.data.operation); 
+		//console.log(name); 
+		// Calls a Client Script function to do the update and pass the updated data object
+		// to the server.
+		if(name.data.operation == "update"){
+			c.snNoteUpdate(name, name.data.sys_id);
+		}
+		// Calls a Client Script function which does the update on the server and passes
+		// the updated data object back to the client.
+		if(name.data.operation == "delete"){
+			c.snNoteDelete(name.data.sys_id);
+		}
+		// Fast and easy... replace the client data object with the server data object
+		if(name.data.operation == "insert"){
+			c.server.refresh();
+		}
+	});
+};]]></client_script>
+        <controller_as>c</controller_as>
+        <css/>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>notes_list_2</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Notes List 2</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	//create an array to populate with notes
+	data.notes = [];
+
+	var noteGR = new GlideRecord('x_snc_createnotes_note');
+	noteGR.addQuery('user', gs.getUser().getID());
+	noteGR.orderByDesc('sys_created_on');
+	noteGR.query();
+
+	while (noteGR.next()) {
+		var noteObj = {};
+		//use service portal helper method to get some display values
+		$sp.getRecordDisplayValues(noteObj, noteGR, 'number,title,sys_id');
+		//get the first 20 characters of the description
+		noteObj.note = noteGR.getValue('note').slice(0,20);
+		//push the populated obj into the array
+
+		data.notes.push(noteObj);
+	}
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-11-08 14:47:32</sys_created_on>
+        <sys_id>77b795f0c3b112105ec61d12b401312d</sys_id>
+        <sys_mod_count>34</sys_mod_count>
+        <sys_name>Notes List 2</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_widget_77b795f0c3b112105ec61d12b401312d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-11-11 17:18:38</sys_updated_on>
+        <template><![CDATA[<div class="panel panel-default">
+  <div class="panel-heading clearfix">
+    <h3 class="panel-title pull-left">
+      ${Notes}
+    </h3>
+  </div>
+  <div class="list-group">
+    <a class="list-group-item" 
+       ng-click="c.selectItem($index)" 
+       ng-repeat="note in data.notes">
+      <h4 class="list-group-item-heading">
+        {{note.title}}
+      </h4>
+      <p class="list-group-item-text">
+        {{note.note}}
+      </p>
+    </a>
+  </div>
+</div>]]></template>
+    </sp_widget>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</application>
+        <file_path/>
+        <instance_id>114aaa5fdb9906d4ebdd2a59139619f5</instance_id>
+        <instance_name>dev257300</instance_name>
+        <name>sp_widget_77b795f0c3b112105ec61d12b401312d</name>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sp_widget"&gt;&lt;sp_widget action="INSERT_OR_UPDATE"&gt;&lt;category&gt;custom&lt;/category&gt;&lt;client_script&gt;&lt;![CDATA[api.controller=function($rootScope,$scope,spUtil) {
+	/* widget controller */
+	var c = this;
+	c.notePos = 0;
+
+	c.selectItem = function(idx) {  
+		// Set the position indicator to the index value passed in on select
+		c.notePos = idx;
+		var id = c.data.notes[idx].sys_id;
+		console.log('Note ID: ' + id);
+		$rootScope.noteID = id;
+		$rootScope.$emit('selectNote', id);
+	};
+
+	$rootScope.$on('updateTitle', function(event,data) { 
+		c.data.notes[c.notePos].title = data.title;
+		c.data.notes[c.notePos].note = data.note;
+	});
+
+
+	// Record removed from data object on the client and passed to server
+	c.snNoteUpdate = function(name,sysID){
+		for (var i=0;i&lt;c.data.notes.length;i++){
+			if(c.data.notes[i].sys_id == name.data.sys_id){
+				if(name.data.record.note){
+					c.data.notes[i].note = name.data.record.note.display_value;
+				}
+				if(name.data.record.title){
+					c.data.notes[i].title = name.data.record.title.display_value;
+				}
+				c.server.update();
+
+			}
+		}
+	}
+	
+		// Record removed from data object on the server and passed back to client
+	c.snNoteDelete = function(sysID){
+
+		c.server.get({
+			action: 'snDeleteNote',
+			noteID: sysID
+
+		}).then(function(r){
+			c.data.notes = r.data.notes;
+		});
+
+	}
+
+	spUtil.recordWatch($scope, "x_snc_createnotes_note", "numberANYTHING", function(name) {
+		console.log(name.data.operation); 
+		//console.log(name); 
+		// Calls a Client Script function to do the update and pass the updated data object
+		// to the server.
+		if(name.data.operation == "update"){
+			c.snNoteUpdate(name, name.data.sys_id);
+		}
+		// Calls a Client Script function which does the update on the server and passes
+		// the updated data object back to the client.
+		if(name.data.operation == "delete"){
+			c.snNoteDelete(name.data.sys_id);
+		}
+		// Fast and easy... replace the client data object with the server data object
+		if(name.data.operation == "insert"){
+			c.server.refresh();
+		}
+	});
+};]]&gt;&lt;/client_script&gt;&lt;controller_as&gt;c&lt;/controller_as&gt;&lt;css/&gt;&lt;data_table&gt;sp_instance&lt;/data_table&gt;&lt;demo_data/&gt;&lt;description/&gt;&lt;docs/&gt;&lt;field_list/&gt;&lt;has_preview&gt;true&lt;/has_preview&gt;&lt;id&gt;notes_list_2&lt;/id&gt;&lt;internal&gt;false&lt;/internal&gt;&lt;link&gt;&lt;![CDATA[function link(scope, element, attrs, controller) {  }]]&gt;&lt;/link&gt;&lt;name&gt;Notes List 2&lt;/name&gt;&lt;option_schema/&gt;&lt;public&gt;false&lt;/public&gt;&lt;roles/&gt;&lt;script&gt;&lt;![CDATA[(function() {
+	//create an array to populate with notes
+	data.notes = [];
+
+	var noteGR = new GlideRecord('x_snc_createnotes_note');
+	noteGR.addQuery('user', gs.getUser().getID());
+	noteGR.orderByDesc('sys_created_on');
+	noteGR.query();
+
+	while (noteGR.next()) {
+		var noteObj = {};
+		//use service portal helper method to get some display values
+		$sp.getRecordDisplayValues(noteObj, noteGR, 'number,title,sys_id');
+		//get the first 20 characters of the description
+		noteObj.note = noteGR.getValue('note').slice(0,20);
+		//push the populated obj into the array
+
+		data.notes.push(noteObj);
+	}
+})();]]&gt;&lt;/script&gt;&lt;servicenow&gt;false&lt;/servicenow&gt;&lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2024-11-08 14:47:32&lt;/sys_created_on&gt;&lt;sys_id&gt;77b795f0c3b112105ec61d12b401312d&lt;/sys_id&gt;&lt;sys_mod_count&gt;34&lt;/sys_mod_count&gt;&lt;sys_name&gt;Notes List 2&lt;/sys_name&gt;&lt;sys_package display_value="CreateNotes" source="x_snc_createnotes"&gt;df5fd9a5090232007f44e1046c8ff69f&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value="CreateNotes"&gt;df5fd9a5090232007f44e1046c8ff69f&lt;/sys_scope&gt;&lt;sys_update_name&gt;sp_widget_77b795f0c3b112105ec61d12b401312d&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2024-11-11 17:18:38&lt;/sys_updated_on&gt;&lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default"&gt;
+  &lt;div class="panel-heading clearfix"&gt;
+    &lt;h3 class="panel-title pull-left"&gt;
+      ${Notes}
+    &lt;/h3&gt;
+  &lt;/div&gt;
+  &lt;div class="list-group"&gt;
+    &lt;a class="list-group-item" 
+       ng-click="c.selectItem($index)" 
+       ng-repeat="note in data.notes"&gt;
+      &lt;h4 class="list-group-item-heading"&gt;
+        {{note.title}}
+      &lt;/h4&gt;
+      &lt;p class="list-group-item-text"&gt;
+        {{note.note}}
+      &lt;/p&gt;
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;&lt;/sp_widget&gt;&lt;/record_update&gt;</payload>
+        <payload_hash>1121794400</payload_hash>
+        <record_name>Notes List 2</record_name>
+        <reverted_from display_value="sp_widget_77b795f0c3b112105ec61d12b401312d">6f9855fdc37112105ec61d12b40131cd</reverted_from>
+        <source>92149978c37112105ec61d12b401319f</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-11-12 12:24:25</sys_created_on>
+        <sys_id>6a5d554ec33112105ec61d12b401319f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>19320550e8b0000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-11-12 12:24:25</sys_updated_on>
+        <type>Widget</type>
+        <update_guid>625d554e52311210c91e5c71f5b3699d</update_guid>
+        <update_guid_history>625d554e52311210c91e5c71f5b3699d:1121794400,2d2c550ee93112106020b272990df793:1525940079,b13bd58a3a311210fbcb005c7ca7488a:1441157070,ff2b91cab4311210aa29e18eddf1ffa7:-1034901105,d31b51cae031121098cb0d7e98fc7e63:-1466087179,140b9d4a81311210e4d315d6b72b3f86:-216724583,33da1d8a62311210bdef6ebfc8c4ea92:1669752841,99ba958add3112102f4bb6ff85b5e7a9:1647801098,cfaa9d4a71311210fec996c42374547e:2024909120,699a954a473112104aa134d582541f50:969104296,ee8a9d4a0b311210a309663e98202b72:-665371417,618a194ab7311210e3f352e30f04ac67:-795233549,8f2a954a5d31121075f0fea2555f2a25:-1198022749,da77198667311210449681274f15f345:-1032919126,b36615468b31121055794d8820871833:715172476,e72599c21f311210c5e0f8be29ff4444:-1129441920,e39855fdc57112105811a46ffce58ccc:1121794400,4177d1bd8f7112103dad97e69c4c69dd:0,f317957d89711210a8ae683404a5d16b:1080646720,ee171df97e711210edef34db33541e19:1121794400,c236153d6e711210b05546869e3d1e64:1080646720,0216113d9f711210da2d49a6a9a33782:-417557691,a8c5d5f9eb711210f858acc7ae08689f:284906571,17851df9dc7112102ed3b436e443bd0f:53536243,e54595b9c871121032fa05c16342d052:-1624516788,1d649d397e71121095ae1d16c1f9d113:1080646720,c1345939d3711210bfc97fd010a3ae79:-78078733,d1b21139a3711210a0ff2f920c86beca:1958375077,7e819175967112103252ceb4ea1d196d:343855544,faf051f1c4711210354756b0d64d3adf:1404850776,39ef0935b0711210fa639bb8d9e58dd4:271824749,3a5e41317a711210b7e4a5342fdb8fb8:175459762,603a097d12311210d6cd9f6fceefec8c:456429773,032a097d25311210038a91e5bb7e8810:605144361,382ac57df731121056e7b1e87ce1500b:456429773,431a857d92311210e4665cd3c67a7d2c:1589563853,8c094d79bb31121008edb52bf83326c7:1864330529,edf805f95c3112105e84e79f01e27679:1874067383,5cb889f927311210d152d2e52687bc07:808800311,358805f9ee3112105c2045447f42605c:1864330529,ce680db9e7311210909612c41227b8f2:-1439931646,2de02d3c94b11210b7e3e56d8f556404:-1481377560,f2fe99f8fdb11210378a22f21e87860c:-1125414506,099e95f82bb11210b9649565012d438b:655154527,36edddb838b112109d84cf9b92ce8b24:1608818755,d5ed59f815b11210c6f7efe84664c109:1824129984,a2cd95f809b11210a161acca7ba71684:2032278694,59cdddb8b9b11210ffdd870ce007c211:-1156174117,a8ad55b881b11210f52269127f99dbeb:2032278694,a7fc55b81db1121032a42d5e5f00f3b6:677275812,777c5df485b112101f83d43a320e53ce:1753417186,396c597876b11210e9d941c9ebc93169:1608856740,efc791f039b112109e662b28491bc330:237993718,f7b795f050b11210079e9210a2dcbe2f:-949939404</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="Notes List 2">369dd98ec33112105ec61d12b40131e1</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-11-12 12:25:32</sys_created_on>
+        <sys_db_object display_value="" name="sp_widget">sp_widget</sys_db_object>
+        <sys_id>63ef040d4c034e7fb024e1d9f7e55431</sys_id>
+        <sys_metadata>77b795f0c3b112105ec61d12b401312d</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Notes List 2</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_scope_delete display_value="">64daa03572704d49a928bf08a985d6f9</sys_scope_delete>
+        <sys_update_name>sp_widget_77b795f0c3b112105ec61d12b401312d</sys_update_name>
+        <sys_update_version display_value="sp_widget_77b795f0c3b112105ec61d12b401312d">6a5d554ec33112105ec61d12b401319f</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-11-12 12:25:32</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
